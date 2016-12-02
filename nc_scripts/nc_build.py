@@ -8,10 +8,10 @@ def getRoot():
         if os.path.exists(os.path.join(dir, ".git")):
             return dir
         dir = os.path.dirname(dir)
-    return string.empty
+    return None
 
 gitRoot = getRoot()
 if gitRoot:
-    print("gitRoot={}".format(gitRoot))
+    print("gitRoot=" + gitRoot)
 
 exit(37)
