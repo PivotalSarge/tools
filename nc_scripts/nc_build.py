@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import argparse
 import os
 import subprocess
 
@@ -30,6 +31,19 @@ if not buildDir:
     exit(1)
 os.chdir(buildDir)
 
-subprocess.call("ls")
+parser = argparse.ArgumentParser(description='Build the native client.')
+parser.add_argument('targets', metavar='target', nargs='*', help='a target to build')
+args = parser.parse_args()
+
+targets = args.targets
+if not targets:
+    targets.extend(['build'])
+for target in targets:
+    print target
+    if target == 'build':
+        command = 'cmake --build . --config Debug -- -j 8'
+    else:
+        command = 'cmake --build . --config Debug --target ' + target
+    subprocess.call(command, shell=True)
 
 exit(0)
