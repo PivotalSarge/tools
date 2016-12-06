@@ -47,12 +47,23 @@ gemfire_version=os.environ.get('GEMFIRE_VERSION')
 if not gemfire_version:
     gemfire_version = '0.0.42-build.000'
 
-targets = args.targets
-if not targets:
-    targets.extend(['build'])
+if not args.targets:
+    targets = ['build']
 else:
+    targets = []
     for target in args.targets:
-        print 'target=%s' % target
+        if target == 'unit':
+            targets.extend(['build', 'unit'])
+        elif target == 'quick':
+            targets.extend(['build', 'unit', 'quick'])
+        elif target == 'stable':
+            targets.extend(['build', 'unit', 'stable'])
+        elif target == 'docs':
+            targets.extend(['build', 'unit', 'quick', 'docs'])
+        elif target == 'install':
+            targets.extend(['build', 'unit', 'quick', 'docs', 'install'])
+        elif target == 'all':
+            targets.extend(['build', 'unit', 'quick', 'docs', 'install', 'package'])
 
 for target in targets:
     if target == 'configure' or target == 'generate':
@@ -62,7 +73,7 @@ for target in targets:
     elif target == 'build':
         os.chdir(buildDir)
         command = 'cmake --build . --config %s -- -j 8' % args.build_type
-    elif target == 'unit' or target == 'unittest' or target == 'unittests':
+    elif target == 'unit':
         os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'test'))
         if os.name == 'nt':
             command = 'gfcppcache_unittets.bat'
@@ -71,6 +82,9 @@ for target in targets:
     elif target == 'quick':
         os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'integration-test'))
         command = 'ctest -C %s -L QUICK' % args.build_type
+    elif target == 'stable':
+        os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'integration-test'))
+        command = 'ctest -C %s -L STABLE' % args.build_type
     else:
         os.chdir(buildDir)
         command = 'cmake --build . --config %s --target %s' % (args.build_type, target)
