@@ -44,12 +44,21 @@ gemfire_home=os.environ.get('GEMFIRE_HOME')
 if not gemfire_home:
     gemfire_home = '/gemfire'
 
+gemfire_version=os.environ.get('GEMFIRE_VERSION')
+if not gemfire_version:
+    gemfire_version = '0.0.42-build.000'
+
 targets = args.targets
 if not targets:
     targets.extend(['build'])
+else:
+    for target in args.targets:
+        print 'target=%s' % target
+
 for target in targets:
     if target == 'configure' or target == 'generate':
-        command = 'cmake -DGEMFIRE_HOME=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' % (gemfire_home, args.build_type, args.install_prefix, srcDir)
+        command = 'cmake -DGEMFIRE_HOME=%s -DGEMFIRE_VERSION=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' %\
+                  (gemfire_home, gemfire_version, args.build_type, args.install_prefix, srcDir)
     elif target == 'build':
         command = 'cmake --build . --config %s -- -j 8' % args.build_type
     else:
