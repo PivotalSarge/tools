@@ -68,6 +68,9 @@ for target in targets:
             command = 'gfcppcache_unittets.bat'
         else:
             command = 'bash gfcppcache_unittests.sh'
+    elif target == 'quick':
+        os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'integration-test'))
+        command = 'ctest -C %s -L QUICK' % args.build_type
     else:
         os.chdir(buildDir)
         command = 'cmake --build . --config %s --target %s' % (args.build_type, target)
