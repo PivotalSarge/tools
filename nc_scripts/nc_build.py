@@ -19,6 +19,8 @@ def getBuildDir(rootDir):
         childDir = os.path.join(rootDir, child)
         if os.path.exists(os.path.join(childDir, "CMakeCache.txt")):
             return childDir
+    if os.path.exists(os.path.join(rootDir, "build")):
+        return os.path.join(rootDir, "build")
     return None
 
 gitRootDir = getRootDir()
@@ -46,7 +48,7 @@ targets = args.targets
 if not targets:
     targets.extend(['build'])
 for target in targets:
-    if target == 'configure':
+    if target == 'configure' or target == 'generate':
         command = 'cmake -DGEMFIRE_HOME=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' % (gemfire_home, args.build_type, args.install_prefix, srcDir)
     elif target == 'build':
         command = 'cmake --build . --config %s -- -j 8' % args.build_type
