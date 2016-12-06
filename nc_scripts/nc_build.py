@@ -6,33 +6,32 @@ import subprocess
 
 def getRootDir():
     dir = os.getcwd()
-    while dir and dir != "/":
-        if os.path.exists(os.path.join(dir, ".git")):
+    while dir and dir != '/':
+        if os.path.exists(os.path.join(dir, '.git')):
             return dir
         dir = os.path.dirname(dir)
     return None
 
 def getBuildDir(rootDir):
-    if os.path.exists(os.path.join(rootDir, "CMakeCache.txt")):
+    if os.path.exists(os.path.join(rootDir, 'CMakeCache.txt')):
         return rootDir
     for child in os.listdir(rootDir):
         childDir = os.path.join(rootDir, child)
-        if os.path.exists(os.path.join(childDir, "CMakeCache.txt")):
+        if os.path.exists(os.path.join(childDir, 'CMakeCache.txt')):
             return childDir
-    if os.path.exists(os.path.join(rootDir, "build")):
-        return os.path.join(rootDir, "build")
+    if os.path.exists(os.path.join(rootDir, 'build')):
+        return os.path.join(rootDir, 'build')
     return None
 
 gitRootDir = getRootDir()
 if not gitRootDir:
-    print("Unable to determine git root directory")
+    print('Unable to determine git root directory')
     exit(1)
 srcDir = os.path.join(gitRootDir, 'src')
 buildDir = getBuildDir(gitRootDir)
 if not buildDir:
-    print("Unable to determine build directory")
+    print('Unable to determine build directory')
     exit(1)
-os.chdir(buildDir)
 
 parser = argparse.ArgumentParser(description='Build the native client.')
 parser.add_argument('targets', metavar='target', nargs='*', help='target to build')
@@ -57,11 +56,20 @@ else:
 
 for target in targets:
     if target == 'configure' or target == 'generate':
+        os.chdir(buildDir)
         command = 'cmake -DGEMFIRE_HOME=%s -DGEMFIRE_VERSION=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' %\
                   (gemfire_home, gemfire_version, args.build_type, args.install_prefix, srcDir)
     elif target == 'build':
+        os.chdir(buildDir)
         command = 'cmake --build . --config %s -- -j 8' % args.build_type
+    elif target == 'unit' or target == 'unittest' or target == 'unittests':
+        os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'test'))
+        if os.name == 'nt':
+            command = 'gfcppcache_unittets.bat'
+        else:
+            command = 'bash gfcppcache_unittests.sh'
     else:
+        os.chdir(buildDir)
         command = 'cmake --build . --config %s --target %s' % (args.build_type, target)
     print command
     subprocess.call(command, shell=True)
