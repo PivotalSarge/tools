@@ -64,6 +64,8 @@ else:
             targets.extend(['build', 'unit', 'quick', 'docs', 'install'])
         elif target == 'all':
             targets.extend(['build', 'unit', 'quick', 'docs', 'install', 'package'])
+        else:
+            targets.append(target)
 
 for target in targets:
     if target == 'configure' or target == 'generate':
