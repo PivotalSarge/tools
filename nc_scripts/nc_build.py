@@ -36,12 +36,22 @@ if not buildDir:
 parser = argparse.ArgumentParser(description='Build the native client.')
 parser.add_argument('targets', metavar='target', nargs='*', help='target to build')
 parser.add_argument('--config', dest='build_type', default='Debug', help='build type')
-parser.add_argument('--install', dest='install_prefix', default='/tmp', help='build type')
+parser.add_argument('--install', dest='install_prefix', default='', help='build type')
 args = parser.parse_args()
+
+install_prefix = args.install_prefix
+if not install_prefix:
+	if os.name == 'nt':
+		install_prefix = 'C:\\tmp'
+	else:
+		install_prefix = '/tmp'
 
 gemfire_home=os.environ.get('GEMFIRE_HOME')
 if not gemfire_home:
-    gemfire_home = '/gemfire'
+	if os.name == 'nt':
+		gemfire_home = 'C:\\gemfire'
+	else:
+		gemfire_home = '/gemfire'
 
 gemfire_version=os.environ.get('GEMFIRE_VERSION')
 if not gemfire_version:
@@ -70,11 +80,18 @@ else:
 for target in targets:
     if target == 'configure' or target == 'generate':
         os.chdir(buildDir)
-        command = 'cmake -DGEMFIRE_HOME=%s -DGEMFIRE_VERSION=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' %\
-                  (gemfire_home, gemfire_version, args.build_type, args.install_prefix, srcDir)
+        if os.name == 'nt':
+			command = 'cmake -G"Visual Studio 12 2013 Win64" -DGEMFIRE_HOME=%s -DGEMFIRE_VERSION=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' %\
+					  (gemfire_home, gemfire_version, args.build_type, install_prefix, srcDir)
+        else:
+			command = 'cmake -DGEMFIRE_HOME=%s -DGEMFIRE_VERSION=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' %\
+					  (gemfire_home, gemfire_version, args.build_type, install_prefix, srcDir)
     elif target == 'build':
         os.chdir(buildDir)
-        command = 'cmake --build . --config %s -- -j 8' % args.build_type
+        if os.name == 'nt':
+            command = 'cmake --build . --config %s -- /m /v:m' % args.build_type
+        else:
+            command = 'cmake --build . --config %s -- -j 8' % args.build_type
     elif target == 'unit':
         os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'test'))
         if os.name == 'nt':
