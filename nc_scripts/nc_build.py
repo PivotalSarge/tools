@@ -36,15 +36,9 @@ if not buildDir:
 parser = argparse.ArgumentParser(description='Build the native client.')
 parser.add_argument('targets', metavar='target', nargs='*', help='target to build')
 parser.add_argument('--config', dest='build_type', default='Debug', help='build type')
-parser.add_argument('--install', dest='install_prefix', default='', help='build type')
+parser.add_argument('--generator', dest='generator', help='generator')
+parser.add_argument('--install', dest='install_prefix', default='', help='install prefix')
 args = parser.parse_args()
-
-install_prefix = args.install_prefix
-if not install_prefix:
-	if os.name == 'nt':
-		install_prefix = 'C:\\tmp'
-	else:
-		install_prefix = '/tmp'
 
 gemfire_home=os.environ.get('GEMFIRE_HOME')
 if not gemfire_home:
@@ -58,7 +52,10 @@ if not gemfire_version:
     gemfire_version = '0.0.42-build.000'
 
 if not args.targets:
-    targets = ['build']
+    if not args.generator:
+        targets = ['build']
+    else:
+        targets = ['generate']
 else:
     targets = []
     for target in args.targets:
@@ -80,18 +77,27 @@ else:
 for target in targets:
     if target == 'configure' or target == 'generate':
         os.chdir(buildDir)
-        if os.name == 'nt':
-			command = 'cmake -G"Visual Studio 12 2013 Win64" -DGEMFIRE_HOME=%s -DGEMFIRE_VERSION=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' %\
-					  (gemfire_home, gemfire_version, args.build_type, install_prefix, srcDir)
-        else:
-			command = 'cmake -DGEMFIRE_HOME=%s -DGEMFIRE_VERSION=%s -DCMAKE_BUILD_TYPE=%s -DCMAKE_INSTALL_PREFIX=%s %s' %\
-					  (gemfire_home, gemfire_version, args.build_type, install_prefix, srcDir)
+        if not args.generator and os.name == 'nt':
+            args.generator = '"Visual Studio 12 2013 Win64"'
+        command = 'cmake'
+        if args.generator:
+            command += ' -G ' + args.generator
+        if gemfire_home:
+            command += ' -DGEMFIRE_HOME=' + gemfire_home
+        if gemfire_version:
+            command += ' -DGEMFIRE_VERSION=' + gemfire_version
+        if args.build_type:
+            command += ' -DCMAKE_BUILD_TYPE=' + args.build_type
+        if args.install_prefix:
+            command += ' -DCMAKE_INSTALL_PREFIX=' + args.install_prefix
+        command += ' ' + srcDir
     elif target == 'build':
         os.chdir(buildDir)
+        command = 'cmake --build . --config ' + args.build_type
         if os.name == 'nt':
-            command = 'cmake --build . --config %s -- /m /v:m' % args.build_type
+            command += ' -- /m /v:m'
         else:
-            command = 'cmake --build . --config %s -- -j 8' % args.build_type
+            command += ' -- -j 8'
     elif target == 'unit':
         os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'test'))
         if os.name == 'nt':
@@ -100,13 +106,13 @@ for target in targets:
             command = 'bash gfcppcache_unittests.sh'
     elif target == 'quick':
         os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'integration-test'))
-        command = 'ctest -C %s -L QUICK' % args.build_type
+        command = 'ctest -C ' + args.build_type + ' -L QUICK'
     elif target == 'stable':
         os.chdir(os.path.join(os.path.join(buildDir, 'cppcache'), 'integration-test'))
-        command = 'ctest -C %s -L STABLE' % args.build_type
+        command = 'ctest -C ' + args.build_type + ' -L STABLE'
     else:
         os.chdir(buildDir)
-        command = 'cmake --build . --config %s --target %s' % (args.build_type, target)
+        command = 'cmake --build . --config ' + args.build_type + ' --target ' + target
     print command
     subprocess.call(command, shell=True)
 
