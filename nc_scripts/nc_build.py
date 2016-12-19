@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import platform
 import subprocess
 
 def getRootDir():
@@ -42,7 +43,7 @@ args = parser.parse_args()
 
 gemfire_home=os.environ.get('GEMFIRE_HOME')
 if not gemfire_home:
-	if os.name == 'nt':
+	if platform.system() == 'Windows':
 		gemfire_home = 'C:\\gemfire'
 	else:
 		gemfire_home = '/gemfire'
@@ -52,7 +53,7 @@ if not gemfire_version:
     gemfire_version = '0.0.42-build.000'
 
 if not args.targets:
-    if not args.generator:
+    if not args.generator and not args.install_prefix:
         targets = ['build']
     else:
         targets = ['generate']
@@ -77,8 +78,11 @@ else:
 for target in targets:
     if target == 'configure' or target == 'generate':
         os.chdir(buildDir)
-        if not args.generator and os.name == 'nt':
-            args.generator = '"Visual Studio 12 2013 Win64"'
+        if not args.generator:
+            if platform.system() == 'Windows':
+                args.generator = '"Visual Studio 12 2013 Win64"'
+            elif platform.system() == 'Darwin':
+                args.generator = 'Xcode'
         command = 'cmake'
         if args.generator:
             command += ' -G ' + args.generator
