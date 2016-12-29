@@ -46,6 +46,12 @@ then
     echo "Adding $OPENSSL/lib to LD_LIBRARY_PATH"
 fi
 
+if [ `uname` = "Darwin" ]
+then
+    DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH
+fi
+
 run_quickstart() {
     printf "%2.2s: " "$1"
     echo $1 | bash runcpp.sh 2>&1 >$1.out
