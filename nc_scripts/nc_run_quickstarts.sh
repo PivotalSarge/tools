@@ -13,6 +13,18 @@ then
     echo "Adding $JAVA_HOME/bin to PATH"
 fi
 
+if [ -z "$GEMFIRE" ]
+then
+    GEMFIRE=/gemfire
+    echo "Setting GEMFIRE to $GEMFIRE"
+fi
+export GEMFIRE
+if [ ! -d "$GEMFIRE" ]
+then
+    echo "$GEMFIRE is not a directory!"
+    exit 1
+fi
+
 if [ -z "$GF_JAVA_HOME" ]
 then
     GF_JAVA_HOME=$JAVA_HOME
@@ -54,7 +66,7 @@ fi
 
 run_quickstart() {
     printf "%2.2s: " "$1"
-    echo $1 | bash runcpp.sh 2>&1 >$1.out
+    echo $1 | bash runcpp.sh >$1.out 2>&1
     N=`grep -E '^\[error |^\tat | cannot open library ' $1.out | wc -l`
     if [ 0 -lt "$N" ]
     then
