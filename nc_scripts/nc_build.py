@@ -41,12 +41,12 @@ parser.add_argument('--generator', dest='generator', help='generator')
 parser.add_argument('--install', dest='install_prefix', default='', help='install prefix')
 args = parser.parse_args()
 
-gemfire_home=os.environ.get('GEMFIRE_HOME')
-if not gemfire_home:
+geode_root=os.environ.get('GEODE_ROOT')
+if not geode_root:
 	if platform.system() == 'Windows':
-		gemfire_home = 'C:\\gemfire'
+		geode_root = 'C:\\geode'
 	else:
-		gemfire_home = '/gemfire'
+		geode_root = '/geode'
 
 gemfire_version=os.environ.get('GEMFIRE_VERSION')
 if not gemfire_version:
@@ -85,9 +85,9 @@ for target in targets:
                 args.generator = 'Xcode'
         command = 'cmake'
         if args.generator:
-            command += ' -G ' + args.generator
-        if gemfire_home:
-            command += ' -DGEMFIRE_HOME=' + gemfire_home
+            command += ' -G "' + args.generator + '"'
+        if geode_root:
+            command += ' -DGEODE_ROOT=' + geode_root
         if gemfire_version:
             command += ' -DGEMFIRE_VERSION=' + gemfire_version
         if args.build_type:
