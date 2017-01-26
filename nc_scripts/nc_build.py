@@ -5,6 +5,17 @@ import os
 import platform
 import subprocess
 
+def which(basename):
+    if platform.system() == 'Windows':
+        separator = ';'
+    else:
+        separator = ':'
+    for dir in os.environ['PATH'].split(separator):
+        executable = os.path.join(dir, basename)
+        if os.path.exists(executable) and os.access(executable, os.X_OK):
+            return executable
+    return ''
+
 def getRootDir():
     dir = os.getcwd()
     while dir and dir != '/':
@@ -39,7 +50,11 @@ parser.add_argument('targets', metavar='target', nargs='*', help='target to buil
 parser.add_argument('--config', dest='build_type', default='Debug', help='build type')
 parser.add_argument('--generator', dest='generator', help='generator')
 parser.add_argument('--install', dest='install_prefix', default='', help='install prefix')
+parser.add_argument('--clang', dest='clang_directory', default='', help='clang directory')
 args = parser.parse_args()
+
+if not args.clang_directory:
+    args.clang_directory = os.path.dirname(which('clang-format'))
 
 geode_root=os.environ.get('GEODE_ROOT')
 if not geode_root:
@@ -94,6 +109,10 @@ for target in targets:
             command += ' -DCMAKE_BUILD_TYPE=' + args.build_type
         if args.install_prefix:
             command += ' -DCMAKE_INSTALL_PREFIX=' + args.install_prefix
+        if args.clang_directory:
+            command += '-DCLANG_FORMAT=' + os.path.join(args.clang_directory, 'clang-format')
+            command += '-DCLANG_TIDY=' + os.path.join(args.clang_directory, 'clang-tidy')
+            command += '-DENABLE_CLANG_TIDY=ON'
         command += ' ' + srcDir
     elif target == 'build':
         os.chdir(buildDir)
