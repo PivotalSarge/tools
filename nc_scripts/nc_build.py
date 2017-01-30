@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
 import argparse
-import os
 import platform
+import re
+import os
 import subprocess
 
 def which(basename):
@@ -34,6 +35,14 @@ def getBuildDir(rootDir):
     if os.path.exists(os.path.join(rootDir, 'build')):
         return os.path.join(rootDir, 'build')
     return None
+
+def getCmakeValue(path, propertyName):
+    cacheFile = file(path)
+    for line in cacheFile:
+        m = re.match('\w*{0}=(.+)'.format(propertyName), line)
+        if m:
+            return m.group(1)
+    return ''
 
 gitRootDir = getRootDir()
 if not gitRootDir:
@@ -106,23 +115,22 @@ for target in targets:
             command += ' -G "' + args.generator + '"'
         if geode_root:
             command += ' -DGEODE_ROOT=' + geode_root
-#        if gemfire_version:
-#            command += ' -DGEMFIRE_VERSION=' + gemfire_version
         if args.build_type:
             command += ' -DCMAKE_BUILD_TYPE=' + args.build_type
         if args.install_prefix:
             command += ' -DCMAKE_INSTALL_PREFIX=' + args.install_prefix
         if args.clang_directory:
-            command += '-DCLANG_FORMAT=' + os.path.join(args.clang_directory, 'clang-format')
-            command += '-DCLANG_TIDY=' + os.path.join(args.clang_directory, 'clang-tidy')
-            command += '-DENABLE_CLANG_TIDY=ON'
+            command += ' -DCLANG_FORMAT=' + os.path.join(args.clang_directory, 'clang-format')
+            command += ' -DCLANG_TIDY=' + os.path.join(args.clang_directory, 'clang-tidy')
+            command += ' -DENABLE_CLANG_TIDY=ON'
         command += ' ' + srcDir
     elif target == 'build':
         os.chdir(buildDir)
         command = 'cmake --build . --config ' + args.build_type
-        if os.name == 'nt':
+        generator = getCmakeValue(os.path.join(buildDir, 'CMakeCache.txt'), 'CMAKE_GENERATOR:INTERNAL')
+        if 'Visual Studio' in generator:
             command += ' -- /m /v:m'
-        else:
+        elif 'Xcode' not in generator:
             command += ' -- -j 8'
     elif target == 'unit':
         if os.path.isdir(os.path.join(buildDir, 'cppcache', 'test', args.build_type)):
