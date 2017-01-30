@@ -58,10 +58,10 @@ if not args.clang_directory:
 
 geode_root=os.environ.get('GEODE_ROOT')
 if not geode_root:
-	if platform.system() == 'Windows':
-		geode_root = 'C:\\geode'
-	else:
-		geode_root = '/geode'
+    if platform.system() == 'Windows':
+        geode_root = 'C:\\geode'
+    else:
+        geode_root = '/geode'
 
 gemfire_version=os.environ.get('GEMFIRE_VERSION')
 if not gemfire_version:
@@ -69,7 +69,10 @@ if not gemfire_version:
 
 if not args.targets:
     if not args.generator and not args.install_prefix:
-        targets = ['build']
+        if os.path.exists(os.path.join(buildDir, 'CMakeCache.txt')):
+            targets = ['build']
+        else:
+            targets = ['generate', 'build']
     else:
         targets = ['generate']
 else:
@@ -103,8 +106,8 @@ for target in targets:
             command += ' -G "' + args.generator + '"'
         if geode_root:
             command += ' -DGEODE_ROOT=' + geode_root
-        if gemfire_version:
-            command += ' -DGEMFIRE_VERSION=' + gemfire_version
+#        if gemfire_version:
+#            command += ' -DGEMFIRE_VERSION=' + gemfire_version
         if args.build_type:
             command += ' -DCMAKE_BUILD_TYPE=' + args.build_type
         if args.install_prefix:
