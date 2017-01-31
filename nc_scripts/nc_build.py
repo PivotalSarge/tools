@@ -72,9 +72,9 @@ if not geode_root:
     else:
         geode_root = '/geode'
 
-gemfire_version=os.environ.get('GEMFIRE_VERSION')
-if not gemfire_version:
-    gemfire_version = '0.0.42-build.000'
+product_version=os.environ.get('PRODUCT_VERSION')
+if not product_version:
+    product_version = '0.0.42-build.000'
 
 if not args.targets:
     if not args.generator and not args.install_prefix:
@@ -115,6 +115,8 @@ for target in targets:
             command += ' -G "' + args.generator + '"'
         if geode_root:
             command += ' -DGEODE_ROOT=' + geode_root
+        if product_version:
+            command += ' -DPRODUCT_VERSION=' + product_version
         if args.build_type:
             command += ' -DCMAKE_BUILD_TYPE=' + args.build_type
         if args.install_prefix:
