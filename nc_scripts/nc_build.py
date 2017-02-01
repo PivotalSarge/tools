@@ -107,7 +107,7 @@ for target in targets:
         os.chdir(buildDir)
         if not args.generator:
             if platform.system() == 'Windows':
-                args.generator = '"Visual Studio 12 2013 Win64"'
+                args.generator = 'Visual Studio 12 2013 Win64'
             elif platform.system() == 'Darwin':
                 args.generator = 'Xcode'
         command = 'cmake'
