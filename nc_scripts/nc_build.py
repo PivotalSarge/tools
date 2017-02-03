@@ -135,14 +135,8 @@ for target in targets:
         elif 'Xcode' not in generator:
             command += ' -- -j 8'
     elif target == 'unit':
-        if os.path.isdir(os.path.join(buildDir, 'cppcache', 'test', args.build_type)):
-            os.chdir(os.path.join(buildDir, 'cppcache', 'test', args.build_type))
-        else:
-            os.chdir(os.path.join(buildDir, 'cppcache', 'test'))
-        if os.name == 'nt':
-            command = 'gfcppcache_unittests.bat'
-        else:
-            command = 'bash gfcppcache_unittests.sh'
+        os.chdir(os.path.join(buildDir, 'cppcache', 'test'))
+        command = 'ctest -C ' + args.build_type
     elif target == 'quick':
         os.chdir(os.path.join(buildDir, 'cppcache', 'integration-test'))
         command = 'ctest -C ' + args.build_type + ' -L QUICK'
