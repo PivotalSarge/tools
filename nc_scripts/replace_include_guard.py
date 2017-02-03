@@ -21,7 +21,7 @@ def replace_include_guard(path):
                 if not macro:
                     ifndef_match = re.match('\s*#ifndef\s+(.+)\s*', line)
                     if ifndef_match:
-                            macro = ifndef_match.group(1)
+                        macro = ifndef_match.group(1)
 
                 define_match = None
                 if macro:
