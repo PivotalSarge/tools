@@ -147,6 +147,8 @@ for target in targets:
         os.chdir(buildDir)
         command = 'cmake --build . --config ' + args.build_type + ' --target ' + target
     print command
-    subprocess.call(command, shell=True)
+    rc = subprocess.call(command, shell=True)
+    if 0 != rc:
+        exit(rc)
 
 exit(0)
