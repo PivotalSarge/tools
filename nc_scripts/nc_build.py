@@ -17,6 +17,16 @@ def which(basename):
             return executable
     return ''
 
+def getTempDir():
+    dir = None
+    if platform.system() == 'Windows':
+        dir = 'C:\\temp'
+    else:
+        dir = '/tmp'
+    if os.path.exists(dir) and os.path.isdir(dir):
+        return dir
+    return None
+
 def getRootDir():
     dir = os.getcwd()
     while dir and dir != '/':
@@ -84,6 +94,13 @@ if not args.targets:
             targets = ['generate', 'build']
     else:
         targets = ['generate']
+
+    if not args.install_prefix:
+        tempDir = getTempDir()
+        if tempDir:
+            installDir = os.path.join(tempDir, 'install')
+            if os.path.exists(installDir) and os.path.isdir(installDir):
+                args.install_prefix = installDir
 else:
     targets = []
     for target in args.targets:
