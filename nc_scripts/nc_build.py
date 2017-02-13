@@ -136,7 +136,7 @@ for target in targets:
             command += ' -- -j 8'
     elif target == 'unit':
         os.chdir(os.path.join(buildDir, 'cppcache', 'test'))
-        command = 'ctest -C ' + args.build_type
+        command = 'ctest -C ' + args.build_type + ' -V'
     elif target == 'quick':
         os.chdir(os.path.join(buildDir, 'cppcache', 'integration-test'))
         command = 'ctest -C ' + args.build_type + ' -L QUICK'
