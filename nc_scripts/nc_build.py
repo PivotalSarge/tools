@@ -70,6 +70,7 @@ parser.add_argument('--config', dest='build_type', default='Debug', help='build 
 parser.add_argument('--generator', dest='generator', help='generator')
 parser.add_argument('--install', dest='install_prefix', default='', help='install prefix')
 parser.add_argument('--clang', dest='clang_directory', default='', help='clang directory')
+parser.add_argument('--parallel-build', dest='parallel_build', default=True, help='whether to build in parallel')
 args = parser.parse_args()
 
 if not args.clang_directory:
@@ -147,10 +148,11 @@ for target in targets:
         os.chdir(buildDir)
         command = 'cmake --build . --config ' + args.build_type
         generator = getCmakeValue(os.path.join(buildDir, 'CMakeCache.txt'), 'CMAKE_GENERATOR:INTERNAL')
-        if 'Visual Studio' in generator:
-            command += ' -- /m /v:m'
-        elif 'Xcode' not in generator:
-            command += ' -- -j 8'
+        if args.parallel_build:
+            if 'Visual Studio' in generator:
+                command += ' -- /m /v:m'
+            elif 'Xcode' not in generator:
+                command += ' -- -j 8'
     elif target == 'unit':
         os.chdir(os.path.join(buildDir, 'cppcache', 'test'))
         command = 'ctest -C ' + args.build_type + ' -V'
