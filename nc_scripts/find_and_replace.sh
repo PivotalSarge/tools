@@ -9,5 +9,9 @@ fi
 
 for FILE in `find * -type f -exec grep -E -l -e "$1" {} \;`
 do
-  sed -i "" -e "s?$1?$2?g" $FILE
+  EXTENSION=`echo $FILE | sed -e 's/.*\(\.[^.]*\)$/\1/'`
+  if [ "$EXTENSION" != ".doc" -a "$EXTENSION" != ".docx" ]
+  then
+    sed -i "" -e "s?$1?$2?g" $FILE
+  fi
 done
