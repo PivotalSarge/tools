@@ -79,9 +79,13 @@ if not args.clang_directory:
 geode_root=os.environ.get('GEODE_ROOT')
 if not geode_root:
     if platform.system() == 'Windows':
-        geode_root = 'C:\\geode'
+        geode_root = 'C:\\gemfire'
+        if not os.path.exists(geode_root) or not os.path.isdir(geode_root):
+            geode_root = 'C:\\geode'
     else:
-        geode_root = '/geode'
+        geode_root = '/gemfire'
+        if not os.path.exists(geode_root) or not os.path.isdir(geode_root):
+            geode_root = '/geode'
 
 product_version=os.environ.get('PRODUCT_VERSION')
 if not product_version:
