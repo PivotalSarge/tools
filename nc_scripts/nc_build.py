@@ -71,6 +71,7 @@ parser.add_argument('--generator', dest='generator', help='generator')
 parser.add_argument('--install', dest='install_prefix', default='', help='install prefix')
 parser.add_argument('--clang', dest='clang_directory', default='', help='clang directory')
 parser.add_argument('--parallel-build', dest='parallel_build', default=True, help='whether to build in parallel')
+parser.add_argument('--gemfire', default=False, help='whether to do a GemFire build')
 args = parser.parse_args()
 
 if not args.clang_directory:
@@ -147,6 +148,10 @@ for target in targets:
             command += ' -DCLANG_FORMAT=' + os.path.join(args.clang_directory, 'clang-format')
             command += ' -DCLANG_TIDY=' + os.path.join(args.clang_directory, 'clang-tidy')
             command += ' -DENABLE_CLANG_TIDY=ON'
+        if args.gemfire:
+            command += ' -DPRODUCT_LIB_NAME=pivotal-gemfire'
+            command += ' -DPRODUCT_PACKAGE_NAME=pivotal-gemfire-native'
+            command += ' -DPRODUCT_DLL_NAME=Pivotal.Gemfire'
         command += ' ' + srcDir
     elif target == 'build':
         os.chdir(buildDir)
