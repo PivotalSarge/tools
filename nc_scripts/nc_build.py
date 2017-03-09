@@ -71,7 +71,7 @@ parser.add_argument('--generator', dest='generator', help='generator')
 parser.add_argument('--install', dest='install_prefix', default='', help='install prefix')
 parser.add_argument('--clang', dest='clang_directory', default='', help='clang directory')
 parser.add_argument('--parallel-build', dest='parallel_build', default=True, help='whether to build in parallel')
-parser.add_argument('--gemfire', default=False, help='whether to do a GemFire build')
+parser.add_argument('--gemfire', action='store_true', default=False, help='whether to do a GemFire build')
 args = parser.parse_args()
 
 if not args.clang_directory:
