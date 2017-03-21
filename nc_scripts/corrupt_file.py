@@ -2,6 +2,7 @@
 
 import argparse
 import binascii
+import math
 import mmap
 import random
 
@@ -12,20 +13,22 @@ def corrupt_file(path, content, percentage):
         if 0 < length:
             n = 0
 
-            while n < (percentage * length):
+            print('{}'.format(percentage * length))
+            while n < math.ceil(percentage * length):
                 i = random.randint(0, length - 1)
-                if content:
-                    if length < i + len(content):
-                        i = length - len(content)
-                    mm[i:(i + len(content))] = content
-                    n += len(content)
-                else:
-                    c = random.randint(48, 122)
-                    while (57 < c and c < 65) or (90 < c and c < 97):
+                if ' ' <= mm[i] <= '~':
+                    if content:
+                        if length < i + len(content):
+                            i = length - len(content)
+                        mm[i:(i + len(content))] = content
+                        n += len(content)
+                    else:
                         c = random.randint(48, 122)
-                    mm.seek(i)
-                    mm.write_byte(chr(c))
-                    n += 1
+                        while (57 < c and c < 65) or (90 < c and c < 97):
+                            c = random.randint(48, 122)
+                        mm.seek(i)
+                        mm.write_byte(chr(c))
+                        n += 1
 
 parser = argparse.ArgumentParser(description='corrupts file(s).')
 parser.add_argument('paths', metavar='path', nargs='*', help='file to corrupt')
@@ -37,6 +40,9 @@ corruption_group.add_argument('--random-file-corruption', action='store_true', h
 args = parser.parse_args()
 
 random.seed()
+
+if 1. < args.percentage:
+    args.percentage = args.percentage / 100.
 
 if args.file_corruption:
     if args.file_type == 'BINARY':
