@@ -167,10 +167,10 @@ for target in targets:
         command = 'ctest -C ' + args.build_type + ' -V'
     elif target == 'quick':
         os.chdir(os.path.join(buildDir, 'cppcache', 'integration-test'))
-        command = 'ctest -C ' + args.build_type + ' -L QUICK'
+        command = 'ctest -C ' + args.build_type + ' -L QUICK' + ' -j 4' + ' --schedule-random'
     elif target == 'stable':
         os.chdir(os.path.join(buildDir, 'cppcache', 'integration-test'))
-        command = 'ctest -C ' + args.build_type + ' -L STABLE'
+        command = 'ctest -C ' + args.build_type + ' -L STABLE' + ' -j 4' + ' --schedule-random'
     else:
         os.chdir(buildDir)
         command = 'cmake --build . --config ' + args.build_type + ' --target ' + target
