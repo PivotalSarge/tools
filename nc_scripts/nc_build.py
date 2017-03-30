@@ -133,6 +133,9 @@ for target in targets:
                 args.generator = 'Visual Studio 12 2013 Win64'
             elif platform.system() == 'Darwin':
                 args.generator = 'Xcode'
+        if not os.path.exists(args.install_prefix):
+            os.makedirs(args.install_prefix)
+
         command = 'cmake'
         if args.generator:
             command += ' -G "' + args.generator + '"'
