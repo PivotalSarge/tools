@@ -46,12 +46,15 @@ args = parser.parse_args()
 
 flags = []
 if not args.targets:
-    targets = ['build']
+    targets = ['spotlessApply', 'build']
 else:
     targets = []
     for target in args.targets:
         #./gradlew build -x :geode-old-versions:compileJava -x :geode-old-versions:verifyGeodetest120 -x :geode-old-versions:downloadZipFiletest120 -x :geode-old-versions:downloadAndUnzipFiletest120
-        if target == 'quick':
+        if target == 'build':
+           targets.insert(0, 'spotlessApply')
+           targets.append(target)
+        elif target == 'quick':
             flags.extend(['-x', 'javadoc', '-x', 'rat', '-x', 'spotlessApply', '-Dskip.tests=true'])
             targets.extend(['assemble', 'installDist', 'testClasses'])
         else:
