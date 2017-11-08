@@ -35,6 +35,15 @@ def getRootDir():
         dir = os.path.dirname(dir)
     return None
 
+def getGradleWrapper(dir):
+    path = os.path.join(dir, 'gradlew')
+    if os.path.isfile(path):
+        return path
+    path = os.path.join(os.path.join(dir, 'closed'), 'gradlew')
+    if os.path.isfile(path):
+        return path
+    return None
+
 gitRootDir = getRootDir()
 if not gitRootDir:
     print('Unable to determine git root directory')
@@ -61,7 +70,7 @@ else:
            targets.append(target)
 
 for target in targets:
-    command = gitRootDir + '/gradlew'
+    command = getGradleWrapper(gitRootDir)
     for flag in flags:
         command += ' ' + flag
     for target in targets:
