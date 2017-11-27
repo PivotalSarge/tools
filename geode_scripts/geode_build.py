@@ -30,6 +30,8 @@ def getTempDir():
 def getRootDir():
     dir = os.getcwd()
     while dir and dir != '/':
+        if os.path.exists(os.path.join(dir, 'gradlew')):
+            return dir
         if os.path.exists(os.path.join(dir, '.git')):
             return dir
         dir = os.path.dirname(dir)
