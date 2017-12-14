@@ -50,6 +50,9 @@ gitRootDir = getRootDir()
 if not gitRootDir:
     print('Unable to determine git root directory')
     exit(1)
+closed = None
+if (os.path.basename(gitRootDir) == 'closed'):
+    closed = True
 
 parser = argparse.ArgumentParser(description='Build the native client.')
 parser.add_argument('targets', metavar='target', nargs='*', help='target to build')
@@ -57,7 +60,9 @@ args = parser.parse_args()
 
 flags = []
 if not args.targets:
-    targets = ['spotlessApply', 'build']
+    targets = ['build']
+    if (not closed):
+        targets.insert(0, 'spotlessApply')
 else:
     targets = []
     for target in args.targets:
@@ -66,8 +71,12 @@ else:
            targets.insert(0, 'spotlessApply')
            targets.append(target)
         elif target == 'quick':
-            flags.extend(['-x', 'javadoc', '-x', 'rat', '-x', 'spotlessApply', '-Dskip.tests=true'])
-            targets.extend(['assemble', 'installDist', 'testClasses'])
+            if (closed):
+                flags.extend(['-Dskip.tests=true'])
+                targets.extend(['build'])
+            else:
+                flags.extend(['-x', 'javadoc', '-x', 'rat', '-x', 'spotlessApply', '-Dskip.tests=true'])
+                targets.extend(['assemble', 'installDist', 'testClasses'])
         else:
            targets.append(target)
 
