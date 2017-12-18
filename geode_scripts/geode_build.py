@@ -51,7 +51,7 @@ if not gitRootDir:
     print('Unable to determine git root directory')
     exit(1)
 closed = None
-if (os.path.basename(gitRootDir) == 'closed'):
+if (os.path.basename(gitRootDir) == 'gemfire'):
     closed = True
 
 parser = argparse.ArgumentParser(description='Build the native client.')
