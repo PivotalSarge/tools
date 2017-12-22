@@ -51,7 +51,7 @@ if not gitRootDir:
     print('Unable to determine git root directory')
     exit(1)
 closed = None
-if (os.path.basename(gitRootDir) == 'gemfire'):
+if (os.path.basename(gitRootDir) == 'gemfire' or os.path.basename(gitRootDir) == 'closed'):
     closed = True
 
 parser = argparse.ArgumentParser(description='Build the native client.')
@@ -71,11 +71,10 @@ else:
            targets.insert(0, 'spotlessApply')
            targets.append(target)
         elif target == 'quick':
+            flags.extend(['-x', 'javadoc', '-x', 'rat', '-x', 'spotlessApply', '-Dskip.tests=true'])
             if (closed):
-                flags.extend(['-Dskip.tests=true'])
                 targets.extend(['build'])
             else:
-                flags.extend(['-x', 'javadoc', '-x', 'rat', '-x', 'spotlessApply', '-Dskip.tests=true'])
                 targets.extend(['assemble', 'installDist', 'testClasses'])
         else:
            targets.append(target)
