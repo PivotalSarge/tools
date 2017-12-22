@@ -84,8 +84,7 @@ for target in targets:
     command = getGradleWrapper(gitRootDir)
     for flag in flags:
         command += ' ' + flag
-    for target in targets:
-        command += ' ' + target
+    command += ' ' + target
     print command
     rc = subprocess.call(command, shell=True)
     if 0 != rc:
