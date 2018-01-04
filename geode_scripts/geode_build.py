@@ -61,16 +61,11 @@ args = parser.parse_args()
 flags = []
 if not args.targets:
     targets = ['build']
-    if (not closed):
-        targets.insert(0, 'spotlessApply')
 else:
     targets = []
     for target in args.targets:
         #./gradlew build -x :geode-old-versions:compileJava -x :geode-old-versions:verifyGeodetest120 -x :geode-old-versions:downloadZipFiletest120 -x :geode-old-versions:downloadAndUnzipFiletest120
-        if target == 'build':
-           targets.insert(0, 'spotlessApply')
-           targets.append(target)
-        elif target == 'quick':
+        if target == 'quick':
             flags.extend(['-x', 'javadoc', '-x', 'rat', '-x', 'spotlessApply', '-Dskip.tests=true'])
             if (closed):
                 targets.extend(['build'])
@@ -79,14 +74,20 @@ else:
         else:
            targets.append(target)
 
+if 'build' in targets:
+    if (not closed):
+        if 'spotlessApply' not in targets:
+            targets.insert(0, 'spotlessApply')
+
+command = getGradleWrapper(gitRootDir)
 for target in targets:
-    command = getGradleWrapper(gitRootDir)
     for flag in flags:
         command += ' ' + flag
     command += ' ' + target
-    print command
-    rc = subprocess.call(command, shell=True)
-    if 0 != rc:
-        exit(rc)
+
+print command
+rc = subprocess.call(command, shell=True)
+if 0 != rc:
+    exit(rc)
 
 exit(0)
