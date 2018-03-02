@@ -54,7 +54,7 @@ closed = None
 if (os.path.basename(gitRootDir) == 'gemfire' or os.path.basename(gitRootDir) == 'closed'):
     closed = True
 
-parser = argparse.ArgumentParser(description='Build the native client.')
+parser = argparse.ArgumentParser(description='Build Geode.')
 parser.add_argument('targets', metavar='target', nargs='*', help='target to build')
 args = parser.parse_args()
 
