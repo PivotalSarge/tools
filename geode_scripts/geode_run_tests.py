@@ -37,6 +37,19 @@ def getGradleWrapper(dir):
         return path
     return None
 
+def findTestFile(dir, testname):
+    for dirpath, dirnames, filenames in os.walk(dir):
+        for filename in filenames:
+            if re.search('^{}\.java'.format(testname), filename):
+                return os.path.join(dirpath, filename)
+    return None
+
+def getModule(filepath, rootDir):
+    rootDir += '/'
+    if filepath.startswith(rootDir):
+        filepath = filepath[len(rootDir):]
+    return filepath.split('/')[0]
+
 def getCategory(filename):
     file = open(filename, 'r')
     for line in file:
@@ -45,11 +58,19 @@ def getCategory(filename):
             return m.group(1)[:1].lower() + m.group(1)[1:]
     return None
 
-def getTest(filename):
-    m = re.search('(.*[^/]+)\.java', filename)
+def getTestName(filename):
+    m = re.search('.*/([^/]+)\.java', filename)
     if m:
         return m.group(1)
     return filename
+
+def getTest(filepath, integration, distributed, module):
+    category = getCategory(filepath)
+    if integration and "integrationTest" == category:
+        return (category, getTestName(filepath), module)
+    if distributed and "distributedTest" == category:
+        return (category, getTestName(filepath), module)
+    return None
 
 def getTests(dir, module, integration, distributed):
     tests = []
@@ -58,11 +79,9 @@ def getTests(dir, module, integration, distributed):
             filepath = os.path.join(dirpath, filename)
             if os.path.isfile(filepath):
                 if filepath.endswith('.java'):
-                    category = getCategory(filepath)
-                    if integration and "integrationTest" == category:
-                        tests.append((category, getTest(filename), module))
-                    if distributed and "distributedTest" == category:
-                        tests.append((category, getTest(filename), module))
+                    test = getTest(filepath, integration, distributed, module)
+                    if test:
+                        tests.append(test)
     return tests
 
 gitRootDir = getRootDir()
@@ -76,50 +95,59 @@ if (os.path.basename(gitRootDir) == 'gemfire' or os.path.basename(gitRootDir) ==
 parser = argparse.ArgumentParser(description='Run Geode distributed and integration tests.')
 parser.add_argument('--integration', dest='integration', default=False, action='store_true')
 parser.add_argument('--distributed', dest='distributed', default=False, action='store_true')
-parser.add_argument('modules', metavar='module', nargs='*', help='module whose tests should be run')
+parser.add_argument('candidates', metavar='test-or-module', nargs='*', help='test to run or module whose tests should be run')
 args = parser.parse_args()
 if not args.integration and not args.distributed:
     args.integration = True
     args.distributed = True
 
-if not args.modules:
-    for candidate in os.listdir(gitRootDir):
-        if candidate.startswith('geode'):
-            args.modules.append(candidate)
-
-logfile = os.path.join(getTempDir(), datetime.datetime.now().strftime("%Y%m%d%H%M%S.txt"))
-log = open(logfile, 'w')
+if not args.candidates:
+    for module in os.listdir(gitRootDir):
+        if module.startswith('geode'):
+            args.candidates.append(module)
 
 tests = []
-for module in args.modules:
-    tests.extend(getTests(module, module, args.integration, args.distributed))
+for candidate in args.candidates:
+    if os.path.isdir(candidate):
+        tests.extend(getTests(candidate, candidate, args.integration, args.distributed))
+    else:
+        filepath = findTestFile(gitRootDir, candidate)
+        if filepath:
+            test = getTest(filepath, True, True, getModule(filepath, gitRootDir))
+            if test:
+                tests.append(test)
 
 totalSuccess = True
-for test in tests:
-    sys.stdout.write('Running ' + test[1].ljust(50, '.'))
-    sys.stdout.flush()
-    # ./gradlew -D${CATEGORY}.single=$TEST ${MODULE}:${CATEGORY} >>$LOG_FILE 2>&1
-    command = getGradleWrapper(gitRootDir)
-    command += ' -D'
-    command += test[0]
-    command += '.single='
-    command += test[1]
-    command += ' '
-    command += test[2]
-    command += ':'
-    command += test[0]
-    rc = subprocess.call(command, stdout=log, stderr=log, shell=True)
-    if rc == 0:
-        sys.stdout.write('PASS')
-    else:
-        sys.stdout.write('FAIL')
-        totalSuccess = False
-    sys.stdout.write('\n')
-    sys.stdout.flush()
-if totalSuccess:
-    os.remove(logfile)
-else:
-    os.rename(logfile, os.path.join(os.getcwd(), os.path.basename(logfile)))
-    print('Output available at: {}'.format(os.path.join(os.getcwd(), os.path.basename(logfile))))
+if tests:
+    logfile = os.path.join(getTempDir(), datetime.datetime.now().strftime("%Y%m%d%H%M%S.txt"))
+    log = open(logfile, 'w')
 
+    for test in tests:
+        sys.stdout.write('Running ' + test[1].ljust(50, '.'))
+        sys.stdout.flush()
+        # ./gradlew -D${CATEGORY}.single=$TEST ${MODULE}:${CATEGORY} >>$LOG_FILE 2>&1
+        command = getGradleWrapper(gitRootDir)
+        command += ' -D'
+        command += test[0]
+        command += '.single='
+        command += test[1]
+        command += ' '
+        command += test[2]
+        command += ':'
+        command += test[0]
+        rc = subprocess.call(command, stdout=log, stderr=log, shell=True)
+        if rc == 0:
+            sys.stdout.write('PASS')
+        else:
+            sys.stdout.write('FAIL')
+            totalSuccess = False
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+    if totalSuccess:
+        os.remove(logfile)
+    else:
+        os.rename(logfile, os.path.join(os.getcwd(), os.path.basename(logfile)))
+        print('Output available at: {}'.format(os.path.join(os.getcwd(), os.path.basename(logfile))))
+if not totalSuccess:
+    exit(1)
 exit(0)
