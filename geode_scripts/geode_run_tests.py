@@ -52,12 +52,20 @@ def getModule(filepath, rootDir):
     return filepath.split('/')[0]
 
 def getCategory(filename):
+    category = None
+
+    # Try to parse the category out of the source file.
     file = open(filename, 'r')
     for line in file:
-        m = re.search('@Category\(([A-Za-z]+)\.class', line)
+        m = re.search('^@Category\(([A-Za-z]+)\.class', line)
         if m:
-            return m.group(1)[:1].lower() + m.group(1)[1:]
-    return None
+            category = m.group(1)[:1].lower() + m.group(1)[1:]
+
+    # The unit test category is called "test" by gradle.
+    if 'unitTest' == category:
+        category = 'test'
+
+    return category
 
 def getTestName(filename):
     m = re.search('.*/([^/]+)\.java', filename)
@@ -65,22 +73,26 @@ def getTestName(filename):
         return m.group(1)
     return filename
 
-def getTest(filepath, integration, distributed, module):
+def getTest(filepath, module, unit, integration, distributed, flaky):
     category = getCategory(filepath)
-    if integration and "integrationTest" == category:
+    if unit and 'test' == category:
         return (category, getTestName(filepath), module)
-    if distributed and "distributedTest" == category:
+    if integration and 'integrationTest' == category:
+        return (category, getTestName(filepath), module)
+    if distributed and 'distributedTest' == category:
+        return (category, getTestName(filepath), module)
+    if flaky and 'flakyTest' == category:
         return (category, getTestName(filepath), module)
     return None
 
-def getTests(dir, module, integration, distributed):
+def getTests(dir, module, unit, integration, distributed, flaky):
     tests = []
     for dirpath, dirnames, filenames in os.walk(dir):
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
             if os.path.isfile(filepath):
                 if filepath.endswith('.java'):
-                    test = getTest(filepath, integration, distributed, module)
+                    test = getTest(filepath, module, unit, integration, distributed, flaky)
                     if test:
                         tests.append(test)
     return tests
@@ -109,12 +121,14 @@ closed = None
 if (os.path.basename(gitRootDir) == 'gemfire' or os.path.basename(gitRootDir) == 'closed'):
     closed = True
 
-parser = argparse.ArgumentParser(description='Run Geode distributed and integration tests.')
+parser = argparse.ArgumentParser(description='Run Geode unit, integration, distributed, and flaky tests.')
+parser.add_argument('--unit', dest='unit', default=False, action='store_true')
 parser.add_argument('--integration', dest='integration', default=False, action='store_true')
 parser.add_argument('--distributed', dest='distributed', default=False, action='store_true')
+parser.add_argument('--flaky', dest='flaky', default=False, action='store_true')
 parser.add_argument('candidates', metavar='test-or-module', nargs='*', help='test to run or module whose tests should be run')
 args = parser.parse_args()
-if not args.integration and not args.distributed:
+if not args.unit and not args.integration and not args.distributed and not args.flaky:
     args.integration = True
     args.distributed = True
 
@@ -126,11 +140,11 @@ if not args.candidates:
 tests = []
 for candidate in args.candidates:
     if os.path.isdir(candidate):
-        tests.extend(getTests(candidate, candidate, args.integration, args.distributed))
+        tests.extend(getTests(candidate, candidate, args.unit, args.integration, args.distributed, args.flaky))
     else:
         filepath = findTestFile(gitRootDir, candidate)
         if filepath:
-            test = getTest(filepath, True, True, getModule(filepath, gitRootDir))
+            test = getTest(filepath, getModule(filepath, gitRootDir), True, True, True, True)
             if test:
                 tests.append(test)
 
@@ -152,7 +166,7 @@ if tests:
         sys.stdout.write(' of ')
         sys.stdout.write(str(n).rjust(width, ' '))
         sys.stdout.write(': ')
-        sys.stdout.write(test[1].ljust(55, '.'))
+        sys.stdout.write(test[1].ljust(60, '.'))
         sys.stdout.flush()
         # ./gradlew -D${CATEGORY}.single=$TEST ${MODULE}:${CATEGORY} >>$LOG_FILE 2>&1
         command = getGradleWrapper(gitRootDir)
