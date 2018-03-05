@@ -2,9 +2,10 @@
 
 import argparse
 import datetime
-import platform
-import re
 import os
+import platform
+import random
+import re
 import subprocess
 import sys
 
@@ -84,6 +85,15 @@ def getTests(dir, module, integration, distributed):
                         tests.append(test)
     return tests
 
+def randomizeIndices(n):
+    random.seed()
+    indices = []
+    while len(indices) < n:
+        index = random.randint(0, n - 1)
+        if index not in indices:
+            indices.append(index)
+    return indices
+
 def getDecimalWidth(n):
     width = 1
     while 10 <= n:
@@ -132,7 +142,9 @@ if tests:
     n = len(tests)
     width = getDecimalWidth(n)
     i = 0
-    for test in tests:
+    indices = randomizeIndices(n)
+    for index in indices:
+        test = tests[index]
         sys.stdout.write(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
         sys.stdout.write(': Running ')
         i += 1
