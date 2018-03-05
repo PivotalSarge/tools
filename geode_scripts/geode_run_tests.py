@@ -113,6 +113,14 @@ def getDecimalWidth(n):
         n //= 10
     return width
 
+def formatDelta(delta):
+    s = str(delta)
+    # if s.startswith('0:'):
+    #     s = s[2:]
+    # if s.startswith('00:'):
+    #     s = s[3:]
+    return s.split('.')[0]
+
 gitRootDir = getRootDir()
 if not gitRootDir:
     print('Unable to determine git root directory')
@@ -139,6 +147,7 @@ if not args.candidates:
 
 tests = []
 for candidate in args.candidates:
+    candidate = candidate.strip('/')
     if os.path.isdir(candidate):
         tests.extend(getTests(candidate, candidate, args.unit, args.integration, args.distributed, args.flaky))
     else:
@@ -150,18 +159,19 @@ for candidate in args.candidates:
 
 totalSuccess = True
 if tests:
+    print('Started at  ' + datetime.datetime.now().isoformat())
     logfile = os.path.join(getTempDir(), datetime.datetime.now().strftime("%Y%m%d%H%M%S.txt"))
     log = open(logfile, 'w')
 
     n = len(tests)
     width = getDecimalWidth(n)
     i = 0
+    previous = datetime.datetime.now()
     indices = randomizeIndices(n)
     for index in indices:
-        test = tests[index]
-        sys.stdout.write(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-        sys.stdout.write(': Running ')
         i += 1
+        test = tests[index]
+        sys.stdout.write('Running ')
         sys.stdout.write(str(i).rjust(width, ' '))
         sys.stdout.write(' of ')
         sys.stdout.write(str(n).rjust(width, ' '))
@@ -179,18 +189,24 @@ if tests:
         command += ':'
         command += test[0]
         rc = subprocess.call(command, stdout=log, stderr=log, shell=True)
+        current = datetime.datetime.now()
         if rc == 0:
             sys.stdout.write('PASS')
         else:
             sys.stdout.write('FAIL')
             totalSuccess = False
-        sys.stdout.write('\n')
+        sys.stdout.write(' (')
+        sys.stdout.write(formatDelta(current - previous))
+        sys.stdout.write(')\n')
         sys.stdout.flush()
+        previous = current
     if totalSuccess:
         os.remove(logfile)
     else:
         os.rename(logfile, os.path.join(os.getcwd(), os.path.basename(logfile)))
         print('Output available at: {}'.format(os.path.join(os.getcwd(), os.path.basename(logfile))))
+    print('Finished at ' + datetime.datetime.now().isoformat())
+
 if not totalSuccess:
     exit(1)
 exit(0)
