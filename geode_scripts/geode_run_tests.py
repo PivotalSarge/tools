@@ -84,6 +84,13 @@ def getTests(dir, module, integration, distributed):
                         tests.append(test)
     return tests
 
+def getDecimalWidth(n):
+    width = 1
+    while 10 < n:
+        width += 1
+        n //= 10
+    return width
+
 gitRootDir = getRootDir()
 if not gitRootDir:
     print('Unable to determine git root directory')
@@ -122,8 +129,18 @@ if tests:
     logfile = os.path.join(getTempDir(), datetime.datetime.now().strftime("%Y%m%d%H%M%S.txt"))
     log = open(logfile, 'w')
 
+    n = len(tests)
+    width = getDecimalWidth(n)
+    i = 0
     for test in tests:
-        sys.stdout.write('Running ' + test[1].ljust(50, '.'))
+        sys.stdout.write(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+        sys.stdout.write(': Running ')
+        i += 1
+        sys.stdout.write(str(i).rjust(width, ' '))
+        sys.stdout.write(' of ')
+        sys.stdout.write(str(n).rjust(width, ' '))
+        sys.stdout.write(': ')
+        sys.stdout.write(test[1].ljust(55, '.'))
         sys.stdout.flush()
         # ./gradlew -D${CATEGORY}.single=$TEST ${MODULE}:${CATEGORY} >>$LOG_FILE 2>&1
         command = getGradleWrapper(gitRootDir)
