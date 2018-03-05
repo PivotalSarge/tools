@@ -86,7 +86,7 @@ def getTests(dir, module, integration, distributed):
 
 def getDecimalWidth(n):
     width = 1
-    while 10 < n:
+    while 10 <= n:
         width += 1
         n //= 10
     return width
