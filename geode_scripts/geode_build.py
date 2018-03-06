@@ -58,7 +58,9 @@ parser = argparse.ArgumentParser(description='Build Geode.')
 parser.add_argument('targets', metavar='target', nargs='*', help='target to build')
 args = parser.parse_args()
 
-flags = ['--parallel']
+flags = []
+if not os.path.basename(gitRootDir) == 'geode-examples':
+    flags.append('--parallel')
 if not args.targets:
     targets = ['build']
 else:
