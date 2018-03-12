@@ -55,10 +55,14 @@ if (os.path.basename(gitRootDir) == 'gemfire' or os.path.basename(gitRootDir) ==
     closed = True
 
 parser = argparse.ArgumentParser(description='Build Geode.')
+parser.add_argument('--verbose', dest='verbose', default=False, action='store_true')
 parser.add_argument('targets', metavar='target', nargs='*', help='target to build')
 args = parser.parse_args()
 
 flags = []
+if args.verbose:
+    flags.append('--info')
+
 if not os.path.basename(gitRootDir) == 'geode-examples':
     flags.append('--parallel')
 if not args.targets:
