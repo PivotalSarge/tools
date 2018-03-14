@@ -160,8 +160,9 @@ for candidate in args.candidates:
 totalSuccess = True
 if tests:
     print('Started at  ' + datetime.datetime.now().isoformat())
-    logfile = os.path.join(getTempDir(), datetime.datetime.now().strftime("%Y%m%d%H%M%S.txt"))
-    log = open(logfile, 'w')
+    if 1 < len(tests):
+        logfile = os.path.join(getTempDir(), datetime.datetime.now().strftime("%Y%m%d%H%M%S.txt"))
+        log = open(logfile, 'w')
 
     n = len(tests)
     width = getDecimalWidth(n)
@@ -171,13 +172,14 @@ if tests:
     for index in indices:
         i += 1
         test = tests[index]
-        sys.stdout.write('Running ')
-        sys.stdout.write(str(i).rjust(width, ' '))
-        sys.stdout.write(' of ')
-        sys.stdout.write(str(n).rjust(width, ' '))
-        sys.stdout.write(': ')
-        sys.stdout.write(test[1].ljust(60, '.'))
-        sys.stdout.flush()
+        if 1 < len(tests):
+            sys.stdout.write('Running ')
+            sys.stdout.write(str(i).rjust(width, ' '))
+            sys.stdout.write(' of ')
+            sys.stdout.write(str(n).rjust(width, ' '))
+            sys.stdout.write(': ')
+            sys.stdout.write(test[1].ljust(60, '.'))
+            sys.stdout.flush()
         # ./gradlew -D${CATEGORY}.single=$TEST ${MODULE}:${CATEGORY} >>$LOG_FILE 2>&1
         command = getGradleWrapper(gitRootDir)
         command += ' -D'
@@ -188,23 +190,29 @@ if tests:
         command += test[2]
         command += ':'
         command += test[0]
-        rc = subprocess.call(command, stdout=log, stderr=log, shell=True)
-        current = datetime.datetime.now()
-        if rc == 0:
-            sys.stdout.write('PASS')
+        if 1 < len(tests):
+            rc = subprocess.call(command, stdout=log, stderr=log, shell=True)
         else:
-            sys.stdout.write('FAIL')
+            rc = subprocess.call(command, shell=True)
+        if rc != 0:
             totalSuccess = False
-        sys.stdout.write(' (')
-        sys.stdout.write(formatDelta(current - previous))
-        sys.stdout.write(')\n')
-        sys.stdout.flush()
+        current = datetime.datetime.now()
+        if 1 < len(tests):
+            if rc == 0:
+                sys.stdout.write('PASS')
+            else:
+                sys.stdout.write('FAIL')
+            sys.stdout.write(' (')
+            sys.stdout.write(formatDelta(current - previous))
+            sys.stdout.write(')\n')
+            sys.stdout.flush()
         previous = current
-    if totalSuccess:
-        os.remove(logfile)
-    else:
-        os.rename(logfile, os.path.join(os.getcwd(), os.path.basename(logfile)))
-        print('Output available at: {}'.format(os.path.join(os.getcwd(), os.path.basename(logfile))))
+    if 1 < len(tests):
+        if totalSuccess:
+            os.remove(logfile)
+        else:
+            os.rename(logfile, os.path.join(os.getcwd(), os.path.basename(logfile)))
+            print('Output available at: {}'.format(os.path.join(os.getcwd(), os.path.basename(logfile))))
     print('Finished at ' + datetime.datetime.now().isoformat())
 
 if not totalSuccess:
