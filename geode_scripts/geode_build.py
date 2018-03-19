@@ -64,7 +64,7 @@ if args.verbose:
     flags.append('--info')
 
 if not os.path.basename(gitRootDir) == 'geode-examples':
-    flags.append('--parallel')
+    flags.extend(['--parallel', '--max-workers', '4'])
 if not args.targets:
     targets = ['build']
 else:
@@ -86,9 +86,9 @@ if 'build' in targets:
             targets.insert(0, 'spotlessApply')
 
 command = getGradleWrapper(gitRootDir)
+for flag in flags:
+    command += ' ' + flag
 for target in targets:
-    for flag in flags:
-        command += ' ' + flag
     command += ' ' + target
 
 print command
