@@ -51,21 +51,23 @@ def getModule(filepath, rootDir):
         filepath = filepath[len(rootDir):]
     return filepath.split('/')[0]
 
-def getCategory(filename):
-    category = None
+def getCategories(filename):
+    categories = []
 
     # Try to parse the category out of the source file.
     file = open(filename, 'r')
     for line in file:
-        m = re.search('^@Category\(([A-Za-z]+)\.class', line)
+        m = re.search('^@Category\({?([^]{}]+)}?\)', line)
         if m:
-            category = m.group(1)[:1].lower() + m.group(1)[1:]
+            for category in re.split(', ', m.group(1)):
+                category = re.sub('\.class$', '', category)
+                category = category[:1].lower() + category[1:]
+                # The unit test category is called "test" by gradle.
+                if 'unitTest' == category:
+                    category = 'test'
+                categories.append(category)
 
-    # The unit test category is called "test" by gradle.
-    if 'unitTest' == category:
-        category = 'test'
-
-    return category
+    return categories
 
 def getTestName(filename):
     m = re.search('.*/([^/]+)\.java', filename)
@@ -74,15 +76,15 @@ def getTestName(filename):
     return filename
 
 def getTest(filepath, module, unit, integration, distributed, flaky):
-    category = getCategory(filepath)
-    if unit and 'test' == category:
-        return (category, getTestName(filepath), module)
-    if integration and 'integrationTest' == category:
-        return (category, getTestName(filepath), module)
-    if distributed and 'distributedTest' == category:
-        return (category, getTestName(filepath), module)
-    if flaky and 'flakyTest' == category:
-        return (category, getTestName(filepath), module)
+    for category in getCategories(filepath):
+        if unit and 'test' == category:
+            return (category, getTestName(filepath), module)
+        if integration and 'integrationTest' == category:
+            return (category, getTestName(filepath), module)
+        if distributed and 'distributedTest' == category:
+            return (category, getTestName(filepath), module)
+        if flaky and 'flakyTest' == category:
+            return (category, getTestName(filepath), module)
     return None
 
 def getTests(dir, module, unit, integration, distributed, flaky):
