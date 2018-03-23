@@ -67,6 +67,11 @@ def getCategories(filename):
                     category = 'test'
                 categories.append(category)
 
+    # Move flaky tests to the front because if a test is marked flaky and another category,
+    # it can only be run as a flaky test.
+    if 'flakyTest' in categories:
+        categories.insert(0, categories.pop(categories.index('flakyTest')))
+
     return categories
 
 def getTestName(filename):
