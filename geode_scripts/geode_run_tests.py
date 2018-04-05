@@ -128,6 +128,13 @@ def formatDelta(delta):
     #     s = s[3:]
     return s.split('.')[0]
 
+def addTest(candidate):
+    filepath = findTestFile(gitRootDir, candidate)
+    if filepath:
+        test = getTest(filepath, getModule(filepath, gitRootDir), True, True, True, True)
+        if test:
+            tests.append(test)
+
 gitRootDir = getRootDir()
 if not gitRootDir:
     print('Unable to determine git root directory')
@@ -158,11 +165,14 @@ for candidate in args.candidates:
     if os.path.isdir(candidate):
         tests.extend(getTests(candidate, candidate, args.unit, args.integration, args.distributed, args.flaky))
     else:
-        filepath = findTestFile(gitRootDir, candidate)
-        if filepath:
-            test = getTest(filepath, getModule(filepath, gitRootDir), True, True, True, True)
-            if test:
-                tests.append(test)
+        if not addTest(candidate):
+            if candidate == 'serializables':
+                addTest('AnalyzeSerializablesJUnitTest')
+                addTest('AnalyzeWANSerializablesJUnitTest')
+                addTest('AnalyzeCQSerializablesJUnitTest')
+                addTest('AnalyzeLuceneSerializablesJUnitTest')
+                addTest('AnalyzeWebApiSerializablesJUnitTest')
+                addTest('AnalyzeConnectorsSerializablesJUnitTest')
 
 totalSuccess = True
 if tests:
