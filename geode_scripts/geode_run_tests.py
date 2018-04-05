@@ -189,6 +189,12 @@ if tests:
             sys.stdout.flush()
         # ./gradlew -D${CATEGORY}.single=$TEST ${MODULE}:${CATEGORY} >>$LOG_FILE 2>&1
         command = getGradleWrapper(gitRootDir)
+        command += ' -x'
+        command += ' javadoc'
+        command += ' -x'
+        command += ' rat'
+        command += ' -x'
+        command += ' spotlessApply'
         command += ' -D'
         command += test[0]
         command += '.single='
