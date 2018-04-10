@@ -189,6 +189,7 @@ if tests:
     for index in indices:
         i += 1
         test = tests[index]
+
         if 1 < len(tests):
             sys.stdout.write('Running ')
             sys.stdout.write(str(i).rjust(width, ' '))
@@ -197,31 +198,40 @@ if tests:
             sys.stdout.write(': ')
             sys.stdout.write(test[1].ljust(60, '.'))
             sys.stdout.flush()
-        # ./gradlew -D${CATEGORY}.single=$TEST ${MODULE}:${CATEGORY} >>$LOG_FILE 2>&1
-        command = getGradleWrapper(gitRootDir)
-        command += ' -x'
-        command += ' javadoc'
-        command += ' -x'
-        command += ' rat'
-        command += ' -x'
-        command += ' spotlessApply'
-        command += ' -D'
-        command += test[0]
-        command += '.single='
-        command += test[1]
-        command += ' '
-        command += test[2]
-        command += ':'
-        command += test[0]
-        if 1 < len(tests):
-            rc = subprocess.call(command, stdout=log, stderr=log, shell=True)
+        elif test[0] == 'test':
+            print('Skipping unit test due to gradle bug')
+
+        if test[0] == 'test':
+            rc = 0
         else:
-            rc = subprocess.call(command, shell=True)
+            # ./gradlew -D${CATEGORY}.single=$TEST ${MODULE}:${CATEGORY} >>$LOG_FILE 2>&1
+            command = getGradleWrapper(gitRootDir)
+            command += ' -x'
+            command += ' javadoc'
+            command += ' -x'
+            command += ' rat'
+            command += ' -x'
+            command += ' spotlessApply'
+            command += ' -D'
+            command += test[0]
+            command += '.single='
+            command += test[1]
+            command += ' '
+            command += test[2]
+            command += ':'
+            command += test[0]
+            if 1 < len(tests):
+                rc = subprocess.call(command, stdout=log, stderr=log, shell=True)
+            else:
+                rc = subprocess.call(command, shell=True)
+
         if rc != 0:
             totalSuccess = False
         current = datetime.datetime.now()
         if 1 < len(tests):
-            if rc == 0:
+            if test[0] == 'test':
+                sys.stdout.write('SKIP')
+            elif rc == 0:
                 sys.stdout.write('PASS')
             else:
                 sys.stdout.write('FAIL')
