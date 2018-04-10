@@ -80,9 +80,11 @@ def getTestName(filename):
         return m.group(1)
     return filename
 
-def getTest(filepath, module, unit, integration, distributed, flaky):
+def getTest(filepath, module, unit, acceptance, integration, distributed, flaky):
     for category in getCategories(filepath):
         if unit and 'test' == category:
+            return (category, getTestName(filepath), module)
+        if acceptance and 'acceptanceTest' == category:
             return (category, getTestName(filepath), module)
         if integration and 'integrationTest' == category:
             return (category, getTestName(filepath), module)
@@ -92,14 +94,14 @@ def getTest(filepath, module, unit, integration, distributed, flaky):
             return (category, getTestName(filepath), module)
     return None
 
-def getTests(dir, module, unit, integration, distributed, flaky):
+def getTests(dir, module, unit, acceptance, integration, distributed, flaky):
     tests = []
     for dirpath, dirnames, filenames in os.walk(dir):
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
             if os.path.isfile(filepath):
                 if filepath.endswith('.java'):
-                    test = getTest(filepath, module, unit, integration, distributed, flaky)
+                    test = getTest(filepath, module, unit, acceptance, integration, distributed, flaky)
                     if test:
                         tests.append(test)
     return tests
@@ -131,7 +133,7 @@ def formatDelta(delta):
 def addTest(candidate):
     filepath = findTestFile(gitRootDir, candidate)
     if filepath:
-        test = getTest(filepath, getModule(filepath, gitRootDir), True, True, True, True)
+        test = getTest(filepath, getModule(filepath, gitRootDir), True, True, True, True, True)
         if test:
             tests.append(test)
 
@@ -143,14 +145,15 @@ closed = None
 if (os.path.basename(gitRootDir) == 'gemfire' or os.path.basename(gitRootDir) == 'closed'):
     closed = True
 
-parser = argparse.ArgumentParser(description='Run Geode unit, integration, distributed, and flaky tests.')
+parser = argparse.ArgumentParser(description='Run Geode unit, acceptance, integration, distributed, and flaky tests.')
 parser.add_argument('--unit', dest='unit', default=False, action='store_true')
+parser.add_argument('--acceptance', dest='acceptance', default=False, action='store_true')
 parser.add_argument('--integration', dest='integration', default=False, action='store_true')
 parser.add_argument('--distributed', dest='distributed', default=False, action='store_true')
 parser.add_argument('--flaky', dest='flaky', default=False, action='store_true')
 parser.add_argument('candidates', metavar='test-or-module', nargs='*', help='test to run or module whose tests should be run')
 args = parser.parse_args()
-if not args.unit and not args.integration and not args.distributed and not args.flaky:
+if not args.unit and not args.acceptance and not args.integration and not args.distributed and not args.flaky:
     args.integration = True
     args.distributed = True
 
@@ -163,7 +166,7 @@ tests = []
 for candidate in args.candidates:
     candidate = candidate.strip('/')
     if os.path.isdir(candidate):
-        tests.extend(getTests(candidate, candidate, args.unit, args.integration, args.distributed, args.flaky))
+        tests.extend(getTests(candidate, candidate, args.unit, args.acceptance, args.integration, args.distributed, args.flaky))
     else:
         if not addTest(candidate):
             if candidate == 'serializables':
