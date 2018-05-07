@@ -7,7 +7,7 @@ BTFILE=${1:-tests.bt}
 #   1) java version
 #   2) checkout directory
 #   3) an open or closed build
-buildRoot=`dirname $0`/geode_root.py
+buildRoot=$(dirname $($(dirname $0)/geode_root.py))
 # choose to run open or closed
 # open
 #buildType=open
@@ -23,7 +23,7 @@ CLASSPATH=$GEMFIRE/lib/geode-dependencies.jar:\
 $GEMFIRE/lib/gfsh-dependencies.jar:\
 $JTESTS:$JTESTS/../../classes/hydraClasses:\
 $JTESTS/../extraJars/groovy-all-2.4.3.jar:\
-$buildRoot/closed/gemfire-test/build/classes/main:\
+$buildRoot/closed/gemfire-test/build/classes/test:\
 $buildRoot/open/geode-core/build/classes/test
 if [ x"$WINDIR" != x ]; then
   CLASSPATH=`cygpath -mp $CLASSPATH`
