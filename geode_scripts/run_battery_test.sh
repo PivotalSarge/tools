@@ -25,6 +25,7 @@ $JTESTS:$JTESTS/../../classes/hydraClasses:\
 $JTESTS/../extraJars/groovy-all-2.4.3.jar:\
 $JTESTS/../extraJars/rest-client-dependencies.jar:\
 $buildRoot/closed/gemfire-test/build/classes/test:\
+$buildRoot/open/geode-test/build/classes/main:\
 $buildRoot/open/geode-core/build/classes/test
 if [ x"$WINDIR" != x ]; then
   CLASSPATH=`cygpath -mp $CLASSPATH`
